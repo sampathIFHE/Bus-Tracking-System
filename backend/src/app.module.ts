@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BusesModule } from './buses/buses.module';
 import { DriverModule } from './driver/driver.module';
 
 // import your entities here, e.g.:
@@ -25,8 +26,9 @@ import { DriverModule } from './driver/driver.module';
       }),
     }),
      
+    BusesModule,
+     
     DriverModule,
-
     // Add your feature modules here
 
 

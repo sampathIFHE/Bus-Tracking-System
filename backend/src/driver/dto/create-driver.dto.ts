@@ -1,27 +1,15 @@
-
-import { IsString, IsOptional } from 'class-validator';
-
-export class LocationJsonDto {
-  @IsOptional()
-  @IsString()
-  longitude?: string;
-
-  @IsOptional()
-  @IsString()
-  latitude?: string;
-}
+import { IsNotEmpty, IsString } from "class-validator";
 
 export class CreateDriverDto {
-  @IsString()
-  name: string;
-
-  @IsString()
-  mobile: string;
-
-  @IsOptional()
-  @IsString()
-  otp:string;
-
-  @IsOptional()
-  location?: LocationJsonDto;
+    @IsString()
+    @IsNotEmpty()
+    name: string;
+    
+    @IsString()
+    @IsNotEmpty()
+    mobile: string;
+    
+    @IsString()
+    @IsNotEmpty()
+    BusAssigned: string;
 }
