@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Branch } from "src/branches/entities/branch.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 
 @Entity()
@@ -18,4 +19,7 @@ export class Driver {
 
     @Column({nullable: true})
     otp: string;
+
+    @ManyToOne(()=>Branch, (branch)=>branch.drivers)
+    branch: Branch;
 }

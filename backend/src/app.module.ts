@@ -5,6 +5,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BusesModule } from './buses/buses.module';
 import { DriverModule } from './driver/driver.module';
+import { BranchesModule } from './branches/branches.module';
+import { AdminsModule } from './admins/admins.module';
 
 // import your entities here, e.g.:
 
@@ -28,6 +30,8 @@ import { DriverModule } from './driver/driver.module';
      
     BusesModule,
     DriverModule,
+    BranchesModule,
+    AdminsModule,
     // Add your feature modules here
 
 

@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Branch } from 'src/branches/entities/branch.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserCategory {
   STUDENT = 'student',
@@ -69,4 +70,7 @@ export class Bus {
 
   @Column({ nullable: true })
   current_stop: string;
+
+   @ManyToOne(()=>Branch, (branch)=>branch.buses)
+   branch: Branch;
 }
