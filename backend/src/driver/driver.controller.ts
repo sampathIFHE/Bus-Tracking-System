@@ -17,6 +17,16 @@ export class DriverController {
     return this.driverService.findAll();
   }
 
+    @Post('request-otp')
+  requestOtp(@Body() body: { mobile: string }) {
+    return this.driverService.generateOtp(body.mobile);
+  }
+
+  @Post('verify-otp')
+  verifyOtp(@Body() body: { mobile: string; otp: string }) {
+    return this.driverService.verifyOtpAndLogin(body.mobile, body.otp);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.driverService.findOne(id);
