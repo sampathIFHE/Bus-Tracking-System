@@ -1,5 +1,6 @@
 import { Branch } from "src/branches/entities/branch.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Bus } from "src/buses/entities/bus.entity";
+import { Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 
 @Entity()
@@ -14,8 +15,8 @@ export class Driver {
     @Column({ unique: true })
     mobile: string;
 
-    @Column({unique:true})
-    BusAssigned: string;
+   @OneToOne(() => Bus, (bus) => bus.driver, { nullable: true })
+   bus: Bus;
 
     @Column({nullable: true})
     otp: string;

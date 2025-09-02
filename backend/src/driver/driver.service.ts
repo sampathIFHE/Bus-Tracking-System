@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,27 +11,92 @@ import { Driver } from './entities/driver.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
-
+import { Branch } from 'src/branches/entities/branch.entity';
+import { Bus } from 'src/buses/entities/bus.entity';
 
 @Injectable()
 export class DriverService {
-   constructor(
-      @InjectRepository(Driver)
-      private  driversRepository: Repository<Driver>,
-      private jwtService: JwtService
-    ) {}
-async create(createDriverDto: CreateDriverDto):Promise<Driver> {
-    const driver = this.driversRepository.create(createDriverDto);
-    return this.driversRepository.save(driver);
+  constructor(
+    @InjectRepository(Driver)
+    private driversRepository: Repository<Driver>,
+    private jwtService: JwtService,
+    @InjectRepository(Branch)
+    private branchRepository: Repository<Branch>,
+    @InjectRepository(Bus)
+    private busRepository: Repository<Bus>,
+  ) {}
+  async create(createDriverDto: CreateDriverDto): Promise<Driver> {
+    const existingDriver = await this.driversRepository.findOne({
+      where: { mobile: createDriverDto.mobile },
+    });
+    if (existingDriver) {
+      throw new UnauthorizedException(
+        'Driver with this mobile number already exists',
+      );
+    }
+
+    const newDriver = {
+      name: createDriverDto.name,
+      mobile: createDriverDto.mobile,
+    };
+
+    if (createDriverDto.branchId && createDriverDto.branchId.trim() !== '') {
+      const branch = await this.branchRepository.findOne({
+        where: { id: createDriverDto.branchId },
+      });
+
+      if (!branch) {
+        throw new NotFoundException(
+          `Branch with ID ${createDriverDto.branchId} not found`,
+        );
+      }
+      newDriver['branch'] = branch;
+    }
+
+
+ let bus: Bus | null = null;
+
+  if (createDriverDto.busId?.trim()) {
+    // Check if the bus exists
+    bus = await this.busRepository.findOne({
+      where: { id: createDriverDto.busId },
+      relations: ['driver'], // include driver if already assigned
+    });
+
+    if (!bus) {
+      throw new NotFoundException(
+        `Bus with ID ${createDriverDto.busId} not found`,
+      );
+    }
+
+    // Check if bus already has a driver assigned
+    if (bus.driver) {
+      throw new BadRequestException(
+        `Bus with ID ${createDriverDto.busId} is already assigned to a driver`,
+      );
+    }
+
+    newDriver['bus'] = bus;
   }
 
-  findAll():Promise<Driver[]> {
+    const driver = this.driversRepository.create(newDriver);
+    const savedDriver = await this.driversRepository.save(driver);
+    if (bus) {
+      bus.driver = savedDriver;
+    await this.busRepository.save(bus);
+    }
+    return savedDriver;
+  }
+
+  findAll(): Promise<Driver[]> {
     return this.driversRepository.find();
   }
 
-async generateOtp(mobile: string): Promise<{ message: string, otp?: string }> {
-    const driver = await this.driversRepository.findOne({ 
-      where: { mobile } 
+  async generateOtp(
+    mobile: string,
+  ): Promise<{ message: string; otp?: string }> {
+    const driver = await this.driversRepository.findOne({
+      where: { mobile },
     });
 
     if (!driver) {
@@ -35,26 +105,32 @@ async generateOtp(mobile: string): Promise<{ message: string, otp?: string }> {
     // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
     // Save OTP to driver record
-  await this.driversRepository.update(driver.id, { otp });
-console.log(`OTP updated in database: ${otp}`);
+    await this.driversRepository.update(driver.id, { otp });
+    console.log(`OTP updated in database: ${otp}`);
     return { message: 'OTP sent successfully', otp };
   }
 
   // Verify OTP and generate JWT token (valid for 7 days)
-  async verifyOtpAndLogin(mobile: string, otp: string): Promise<{ access_token: string }> {
-      console.log(`Verifying OTP for mobile: ${mobile}, OTP provided: ${otp}`);
-    const driver = await this.driversRepository.findOne({ 
-      where: { mobile } 
+  async verifyOtpAndLogin(
+    mobile: string,
+    otp: string,
+  ): Promise<{ access_token: string }> {
+    console.log(`Verifying OTP for mobile: ${mobile}, OTP provided: ${otp}`);
+    const driver = await this.driversRepository.findOne({
+      where: { mobile },
     });
     if (!driver) {
-      
-    console.log('Driver not found');
+      console.log('Driver not found');
       throw new NotFoundException('Driver not found');
     }
-      console.log(`Stored OTP: ${driver.otp}, Provided OTP: ${otp}`, typeof driver.otp, typeof otp);
-  console.log(`OTP match: ${driver.otp === otp}`);
+    console.log(
+      `Stored OTP: ${driver.otp}, Provided OTP: ${otp}`,
+      typeof driver.otp,
+      typeof otp,
+    );
+    console.log(`OTP match: ${driver.otp === otp}`);
     if (driver.otp != otp) {
-          console.log('OTP mismatch');
+      console.log('OTP mismatch');
       throw new UnauthorizedException('Invalid OTP');
     }
     driver.otp = '';
@@ -64,26 +140,40 @@ console.log(`OTP updated in database: ${otp}`);
       mobile: driver.mobile,
       userType: 'driver',
       name: driver.name,
-      busAssigned: driver.BusAssigned
+      busAssigned: driver.bus ? driver.bus.assigned_no : null,
     };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
-
-  findOne(id: string):Promise<string> {
-    return this.driversRepository.findOneBy({ id: (id) })
-      .then(driver => driver ? `Driver found: ${driver.name}` : `Driver with id ${id} not found`);
+  findOne(id: string): Promise<string> {
+    return this.driversRepository
+      .findOneBy({ id: id })
+      .then((driver) =>
+        driver
+          ? `Driver found: ${driver.name}`
+          : `Driver with id ${id} not found`,
+      );
   }
 
   update(id: string, updateDriverDto: UpdateDriverDto) {
-    return this.driversRepository.update(id, updateDriverDto)
-      .then(result => result.affected ? `Driver with id ${id} updated` : `Driver with id ${id} not found`);
+    return this.driversRepository
+      .update(id, updateDriverDto)
+      .then((result) =>
+        result.affected
+          ? `Driver with id ${id} updated`
+          : `Driver with id ${id} not found`,
+      );
   }
 
-  remove(id: string):Promise<string> {
-    return this.driversRepository.delete(id)
-      .then(result => result.affected ? `Driver with id ${id} removed` : `Driver with id ${id} not found`); 
-      }
+  remove(id: string): Promise<string> {
+    return this.driversRepository
+      .delete(id)
+      .then((result) =>
+        result.affected
+          ? `Driver with id ${id} removed`
+          : `Driver with id ${id} not found`,
+      );
+  }
 }

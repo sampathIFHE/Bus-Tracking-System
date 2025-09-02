@@ -1,5 +1,6 @@
 import { Branch } from 'src/branches/entities/branch.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Driver } from 'src/driver/entities/driver.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserCategory {
   STUDENT = 'student',
@@ -55,11 +56,9 @@ export class Bus {
   })
   category: UserCategory;
 
-  @Column('jsonb',{ nullable: true })
-  driver: { 
-    name: string;
-    mobile: string;
-  };
+@OneToOne(() => Driver, (driver) => driver.bus, { nullable: true })
+  @JoinColumn()
+  driver: Driver;
 
   @Column('jsonb',{ nullable: true })
   tempory_driver: {

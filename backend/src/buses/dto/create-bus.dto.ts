@@ -58,11 +58,7 @@ export class CreateBusDto {
   category?: UserCategory;
 
   @IsOptional()
-  driver?: {
-    id: string;
-    name: string;
-    mobile: string;
-  };
+  driver?: any ;
 
   @IsOptional()
   tempory_driver?: {
@@ -78,4 +74,8 @@ export class CreateBusDto {
   @IsString()
   @IsOptional()
   current_stop?: string;
+
+  @IsString()
+  @IsOptional()
+  branchId: string;
 }

@@ -16,7 +16,7 @@ export class AdminsService {
   ) {}  
 
 async create(createAdminDto: CreateAdminDto): Promise<Admin> {
-  // Check if mobile number already exists
+
   const existingAdmin = await this.adminsRepository.findOne({
     where: { mobile: createAdminDto.mobile }
   });
@@ -25,7 +25,6 @@ async create(createAdminDto: CreateAdminDto): Promise<Admin> {
     throw new ConflictException(`Admin with mobile number ${createAdminDto.mobile} already exists`);
   }
 
-  // Create the admin first without branch
   const admin = this.adminsRepository.create({
     name: createAdminDto.name,
     mobile: createAdminDto.mobile,
@@ -33,10 +32,10 @@ async create(createAdminDto: CreateAdminDto): Promise<Admin> {
     created_by: createAdminDto.created_by,
     otp: createAdminDto.otp,
     last_login: createAdminDto.last_login,
-    // Don't include branch here initially
+
   });
 
-  // If branch is provided, find and assign it
+
   if (createAdminDto.branchId && createAdminDto.branchId.trim() !== '') {
     const branch = await this.branchRepository.findOne({
       where: { id: createAdminDto.branchId }
@@ -45,7 +44,7 @@ async create(createAdminDto: CreateAdminDto): Promise<Admin> {
     if (!branch) {
       throw new NotFoundException(`Branch with ID ${createAdminDto.branchId} not found`);
     }
-    admin.branch = branch; // Assign the branch entity
+    admin.branch = branch; 
   }
 
   return await this.adminsRepository.save(admin);

@@ -7,10 +7,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Driver } from './entities/driver.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { Branch } from 'src/branches/entities/branch.entity';
+import { Bus } from 'src/buses/entities/bus.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Driver]),
+    TypeOrmModule.forFeature([Driver,Branch,Bus]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

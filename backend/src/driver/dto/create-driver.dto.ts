@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateDriverDto {
     @IsString()
@@ -10,6 +10,14 @@ export class CreateDriverDto {
     mobile: string;
     
     @IsString()
-    @IsNotEmpty()
-    BusAssigned: string;
+    @IsOptional()
+    busId: string;
+
+    @IsString()
+    @IsOptional()
+    branchId: string;
+
+    @IsString()
+    @IsOptional()
+    otp: string;
 }

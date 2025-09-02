@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBusDto } from './dto/create-bus.dto';
 import { UpdateLocationDto } from './dto/update-bus.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,8 +13,25 @@ export class BusesService {
   ) {}
 
     async create(createBusDto: CreateBusDto): Promise<Bus> {
+
+      const existingRegistration = await this.busesRepository.findOne({
+        where: { registration_no: createBusDto.registration_no }
+      })
+
+      if(existingRegistration){
+        throw new ConflictException(`Bus with registration number ${createBusDto.registration_no} already exists`);
+      }
+
+      const existingAssignedNo = await this.busesRepository.findOne({
+        where: { assigned_no: createBusDto.assigned_no.toLowerCase() ||createBusDto.assigned_no.toUpperCase() }
+      })
+
+      if(existingAssignedNo){
+        throw new ConflictException(`Bus with assigned number ${createBusDto.assigned_no} already exists`);
+      }
+
     const bus = this.busesRepository.create(createBusDto);
-    return await this.busesRepository.save(bus);
+    return await this.busesRepository.save(bus); 
   }
 
   async findAll(): Promise<Bus[]> {
