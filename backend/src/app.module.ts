@@ -7,6 +7,7 @@ import { BusesModule } from './buses/buses.module';
 import { DriverModule } from './driver/driver.module';
 import { BranchesModule } from './branches/branches.module';
 import { AdminsModule } from './admins/admins.module';
+import { UsersModule } from './users/users.module';
 
 // import your entities here, e.g.:
 
@@ -32,6 +33,7 @@ import { AdminsModule } from './admins/admins.module';
     DriverModule,
     BranchesModule,
     AdminsModule,
+    UsersModule,
     // Add your feature modules here
 
 

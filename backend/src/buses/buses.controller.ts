@@ -12,9 +12,9 @@ export class BusesController {
     return this.busesService.create(createBusDto);
   }
 
-  @Get()
-  findAll() {
-    return this.busesService.findAll();
+  @Get(':id')
+  findAll(@Param('id') id:string) {
+    return this.busesService.findAll(id);
   }
 
   @Get(':id')

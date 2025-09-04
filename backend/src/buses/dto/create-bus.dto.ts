@@ -58,7 +58,7 @@ export class CreateBusDto {
   category?: UserCategory;
 
   @IsOptional()
-  driver?: any ;
+  driver?: any;
 
   @IsOptional()
   tempory_driver?: {

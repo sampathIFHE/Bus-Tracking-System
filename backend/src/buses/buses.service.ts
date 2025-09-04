@@ -34,8 +34,15 @@ export class BusesService {
     return await this.busesRepository.save(bus); 
   }
 
-  async findAll(): Promise<Bus[]> {
-    return await this.busesRepository.find();
+  async findAll(id:string): Promise<Bus[]> {
+    const buses =  await this.busesRepository.find({
+    where: { branch: { id } }, 
+    relations: ['branch'], 
+  });
+    if (!buses || buses.length === 0) {
+      throw new NotFoundException('No buses found for this branch');    
+    }
+    return buses;
   }
 
   async findOne(id: string): Promise<Bus> {

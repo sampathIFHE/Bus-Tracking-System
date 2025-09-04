@@ -1,6 +1,6 @@
 import { Branch } from 'src/branches/entities/branch.entity';
-import { Driver } from 'src/driver/entities/driver.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserCategory {
   STUDENT = 'student',
@@ -56,10 +56,13 @@ export class Bus {
   })
   category: UserCategory;
 
-@OneToOne(() => Driver, (driver) => driver.bus, { nullable: true })
-  @JoinColumn()
-  driver: Driver;
-
+  @Column({type:'json', nullable: true })
+  driver:{
+    id: string;
+    name: string;
+    mobile: string;
+  };
+  
   @Column('jsonb',{ nullable: true })
   tempory_driver: {
     id: string;
@@ -72,4 +75,8 @@ export class Bus {
 
    @ManyToOne(()=>Branch, (branch)=>branch.buses)
    branch: Branch;
+
+  @OneToMany(()=>User,  (user)=>user.bus)
+  users: User[];
+ 
 }
