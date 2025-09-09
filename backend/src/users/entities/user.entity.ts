@@ -58,4 +58,7 @@ export class User {
 
     @Column()
     created_by: string;
+
+    @Column({nullable:true})
+    isActive:boolean;
 }

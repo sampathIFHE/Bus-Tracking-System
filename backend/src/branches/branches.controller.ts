@@ -17,6 +17,11 @@ export class BranchesController {
     return this.branchesService.findAll();
   }
 
+  @Get('relations/:id')
+  findAllWithRelations(@Param('id') id: string) {
+    return this.branchesService.findAllWithRelations(id);
+  }
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.branchesService.findOne(id);

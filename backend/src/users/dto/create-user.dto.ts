@@ -40,5 +40,7 @@ export class CreateUserDto {
     @IsOptional()
     valid_till: string;
 
+    @IsOptional()
+    isActive:boolean;
 
 }
