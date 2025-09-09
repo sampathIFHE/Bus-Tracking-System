@@ -12,9 +12,9 @@ export class DriverController {
     return this.driverService.create(createDriverDto);
   }
 
-  @Get()
-  findAll() {
-    return this.driverService.findAll();
+  @Get(':id')
+  findAll(@Param('id') id: string) {
+    return this.driverService.findAll(id);
   }
 
     @Post('request-otp')

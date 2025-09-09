@@ -1,10 +1,12 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Admin } from './entities/admin.entity';
 import { Repository } from 'typeorm';
 import { Branch } from 'src/branches/entities/branch.entity';
+import * as crypto from 'crypto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AdminsService {
@@ -12,7 +14,8 @@ export class AdminsService {
     @InjectRepository(Admin)
     private adminsRepository: Repository<Admin>,
     @InjectRepository(Branch)
-    private branchRepository: Repository<Branch>
+    private branchRepository: Repository<Branch>,
+    private jwtService: JwtService,
   ) {}  
 
 async create(createAdminDto: CreateAdminDto): Promise<Admin> {
@@ -52,6 +55,44 @@ async create(createAdminDto: CreateAdminDto): Promise<Admin> {
 
  async findAll(): Promise<Admin[]> {
     return await this.adminsRepository.find({relations: ['branch']});
+  }
+
+  async generateOtp(mobile: string): Promise<{ message: string; otp: any; }> {
+    const admin:any = await this.adminsRepository.findOne({ where: { mobile } });
+    if(!admin){
+      throw new NotFoundException("Admin not found with this Mobile no")
+    }
+    const otp = crypto.randomInt(100000, 999999).toString();
+    admin.otp =otp
+    await this.adminsRepository.save(admin)
+      console.log(`OTP updated in database: ${otp}`);
+    return { message: 'OTP sent successfully', otp };
+  }
+
+  async verifyOTP(mobile:string, otp:string):Promise<{access_token: string,userId:string, branchId:string} >{
+    console.log(`Verifying OTP for mobile: ${mobile}, OTP provided: ${otp}`);
+     const admin:any = await this.adminsRepository.findOne({ where: { mobile } , relations: ['branch'],});
+    if(!admin){
+      throw new NotFoundException("Admin not found with this Mobile no")
+    }
+    if(otp != admin.otp){
+       throw new UnauthorizedException('Invalid OTP');
+    }
+    admin.otp =''
+    await this.adminsRepository.save(admin)
+    const payload ={
+      sub:admin.id,
+      mobile:admin.mobile,
+      userType:"Admin",
+      name:admin.name,
+      branchID:admin.branch?.id
+    }
+ 
+     return {
+      access_token: this.jwtService.sign(payload),
+      userId:admin.id,
+      branchId:admin.branch?.id
+    };
   }
 
 async  findOne(id: string):Promise<Admin> {

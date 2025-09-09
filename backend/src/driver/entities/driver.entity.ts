@@ -15,8 +15,11 @@ export class Driver {
     @Column({ unique: true })
     mobile: string;
 
-   @OneToOne(() => Bus, (bus) => bus.driver, { nullable: true })
-   bus: Bus;
+  @Column({type: 'json', nullable: true })
+   bus:{
+    id:string;
+    assigned_no:string;
+   }
 
     @Column({nullable: true})
     otp: string;

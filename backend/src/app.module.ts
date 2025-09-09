@@ -7,6 +7,10 @@ import { BusesModule } from './buses/buses.module';
 import { DriverModule } from './driver/driver.module';
 import { BranchesModule } from './branches/branches.module';
 import { AdminsModule } from './admins/admins.module';
+import { UsersModule } from './users/users.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt.guard';
+import { AuthModule } from './auth/auth.module';
 
 // import your entities here, e.g.:
 
@@ -27,17 +31,21 @@ import { AdminsModule } from './admins/admins.module';
         synchronize: true, // set to false in production
       }),
     }),
-     
+    AuthModule, 
     BusesModule,
     DriverModule,
     BranchesModule,
     AdminsModule,
+    UsersModule,
     // Add your feature modules here
 
 
     
   ],
   controllers: [AppController],
-  providers: [AppService,  ],
+  providers: [AppService,    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    }, ],
 })
 export class AppModule {}

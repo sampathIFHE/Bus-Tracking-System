@@ -59,9 +59,7 @@ export class DriverService {
   if (createDriverDto.busId?.trim()) {
     // Check if the bus exists
     bus = await this.busRepository.findOne({
-      where: { id: createDriverDto.busId },
-      relations: ['driver'], // include driver if already assigned
-    });
+      where: { id: createDriverDto.busId }});
 
     if (!bus) {
       throw new NotFoundException(
@@ -75,21 +73,37 @@ export class DriverService {
         `Bus with ID ${createDriverDto.busId} is already assigned to a driver`,
       );
     }
-
-    newDriver['bus'] = bus;
+     let json = {
+      id: bus.id,
+      asassigned_no: bus.assigned_no,
+    }
+    newDriver['bus'] = json;
   }
 
     const driver = this.driversRepository.create(newDriver);
     const savedDriver = await this.driversRepository.save(driver);
+    
     if (bus) {
-      bus.driver = savedDriver;
+      let json = {
+        id: savedDriver.id,
+        name: savedDriver.name,
+        mobile: savedDriver.mobile,
+      }
+      bus.driver = json;
     await this.busRepository.save(bus);
     }
     return savedDriver;
   }
 
-  findAll(): Promise<Driver[]> {
-    return this.driversRepository.find();
+async  findAll(id:string): Promise<Driver[]> {    
+ const drivers =  await this.driversRepository.find({
+    where: { branch: { id } }, 
+    relations: ['branch'], 
+  });
+  if (!drivers || drivers.length === 0) {
+    throw new NotFoundException('No drivers found for this branch');    
+  }
+  return drivers;
   }
 
   async generateOtp(
@@ -102,15 +116,13 @@ export class DriverService {
     if (!driver) {
       throw new NotFoundException('Driver not found with this mobile number');
     }
-    // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
-    // Save OTP to driver record
     await this.driversRepository.update(driver.id, { otp });
     console.log(`OTP updated in database: ${otp}`);
     return { message: 'OTP sent successfully', otp };
   }
 
-  // Verify OTP and generate JWT token (valid for 7 days)
+
   async verifyOtpAndLogin(
     mobile: string,
     otp: string,
@@ -140,7 +152,7 @@ export class DriverService {
       mobile: driver.mobile,
       userType: 'driver',
       name: driver.name,
-      busAssigned: driver.bus ? driver.bus.assigned_no : null,
+      busAssigned: driver.bus ? driver.bus?.assigned_no : null,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -167,7 +179,7 @@ export class DriverService {
       );
   }
 
-  remove(id: string): Promise<string> {
+async  remove(id: string): Promise<string> {
     return this.driversRepository
       .delete(id)
       .then((result) =>
